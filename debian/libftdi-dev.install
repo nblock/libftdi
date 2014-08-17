@@ -1,0 +1,5 @@
+usr/include/*.h
+usr/bin/libftdi-config
+usr/lib/*/libftdi.a
+usr/lib/*/libftdi.so
+usr/lib/*/pkgconfig/libftdi.pc
