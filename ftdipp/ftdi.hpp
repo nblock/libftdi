@@ -2,11 +2,11 @@
                           ftdi.hpp  -  C++ wrapper for libftdi
                              -------------------
     begin                : Mon Oct 13 2008
-    copyright            : (C) 2008 by Marek Vavruša
+    copyright            : (C) 2008-2014 by Marek Vavruša and libftdi developers
     email                : opensource@intra2net.com and marek@vavrusa.com
  ***************************************************************************/
 /*
-Copyright (C) 2008 by Marek Vavruša
+Copyright (C) 2008-2014 by Marek Vavruša and libftdi developers
 
 The software in this package is distributed under the GNU General
 Public License version 2 (with a special exception described below).
@@ -79,7 +79,7 @@ public:
 
     /* Device manipulators */
     bool is_open();
-    int open(struct usb_device *dev = 0);
+    int open(struct libusb_device *dev = 0);
     int open(int vendor, int product);
     int open(int vendor, int product, const std::string& description, const std::string& serial = std::string(), unsigned int index=0);
     int open(const std::string& description);
@@ -87,12 +87,16 @@ public:
     int reset();
     int flush(int mask = Input|Output);
     int set_interface(enum ftdi_interface interface);
-    void set_usb_device(struct usb_dev_handle *dev);
+    void set_usb_device(struct libusb_device_handle *dev);
 
     /* Line manipulators */
     int set_baud_rate(int baudrate);
     int set_line_property(enum ftdi_bits_type bits, enum ftdi_stopbits_type sbit, enum ftdi_parity_type parity);
     int set_line_property(enum ftdi_bits_type bits, enum ftdi_stopbits_type sbit, enum ftdi_parity_type parity, enum ftdi_break_type break_type);
+    int get_usb_read_timeout() const;
+    void set_usb_read_timeout(int usb_read_timeout);
+    int get_usb_write_timeout() const;
+    void set_usb_write_timeout(int usb_write_timeout);
 
     /* I/O */
     int read(unsigned char *buf, int size);
@@ -123,7 +127,6 @@ public:
     /* BitBang mode */
     int set_bitmode(unsigned char bitmask, unsigned char mode);
     int set_bitmode(unsigned char bitmask, enum ftdi_mpsse_mode mode);
-    int DEPRECATED(bitbang_enable(unsigned char bitmask));
     int bitbang_disable();
     int read_pins(unsigned char *pins);
 
@@ -137,7 +140,7 @@ protected:
     /* Properties */
     struct ftdi_context* context();
     void set_context(struct ftdi_context* context);
-    void set_usb_device(struct usb_device *dev);
+    void set_usb_device(struct libusb_device *dev);
 
 private:
     class Private;
@@ -152,9 +155,7 @@ public:
     Eeprom(Context* parent);
     ~Eeprom();
 
-    void init_defaults();
-    void set_size(int size);
-    int size(unsigned char *eeprom, int maxsize);
+    int init_defaults(char *manufacturer, char* product, char * serial);
     int chip_id(unsigned int *chipid);
     int build(unsigned char *output);
 
@@ -177,7 +178,7 @@ public:
     List(struct ftdi_device_list* devlist = 0);
     ~List();
 
-    static List* find_all(int vendor, int product);
+    static List* find_all(Context &context, int vendor, int product);
 
     /// List type storing "Context" objects
     typedef std::list<Context> ListType;

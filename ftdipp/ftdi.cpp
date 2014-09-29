@@ -2,11 +2,11 @@
                           ftdi.cpp  -  C++ wraper for libftdi
                              -------------------
     begin                : Mon Oct 13 2008
-    copyright            : (C) 2008 by Marek Vavruša
+    copyright            : (C) 2008-2014 by Marek Vavruša / libftdi developers
     email                : opensource@intra2net.com and marek@vavrusa.com
  ***************************************************************************/
 /*
-Copyright (C) 2008 by Marek Vavruša
+Copyright (C) 2008-2014 by Marek Vavruša / libftdi developers
 
 The software in this package is distributed under the GNU General
 Public License version 2 (with a special exception described below).
@@ -26,7 +26,9 @@ in accordance with section (3) of the GNU General Public License.
 This exception does not invalidate any other reasons why a work based
 on this file might be covered by the GNU General Public License.
 */
+#include <libusb.h>
 #include "ftdi.hpp"
+#include "ftdi_i.h"
 #include "ftdi.h"
 
 namespace Ftdi
@@ -36,7 +38,7 @@ class Context::Private
 {
 public:
     Private()
-            :  ftdi(0), dev(0), open(false)
+            : open(false), ftdi(0), dev(0)
     {
         ftdi = ftdi_new();
     }
@@ -52,7 +54,7 @@ public:
     bool open;
 
     struct ftdi_context* ftdi;
-    struct usb_device*   dev;
+    struct libusb_device* dev;
 
     std::string vendor;
     std::string description;
@@ -117,7 +119,7 @@ int Context::open(const std::string& description)
     return get_strings_and_reopen();
 }
 
-int Context::open(struct usb_device *dev)
+int Context::open(struct libusb_device *dev)
 {
     if (dev != 0)
         d->dev = dev;
@@ -131,6 +133,7 @@ int Context::open(struct usb_device *dev)
 int Context::close()
 {
     d->open = false;
+    d->dev = 0;
     return ftdi_usb_close(d->ftdi);
 }
 
@@ -156,10 +159,10 @@ int Context::set_interface(enum ftdi_interface interface)
     return ftdi_set_interface(d->ftdi, interface);
 }
 
-void Context::set_usb_device(struct usb_dev_handle *dev)
+void Context::set_usb_device(struct libusb_device_handle *dev)
 {
     ftdi_set_usbdev(d->ftdi, dev);
-    d->dev = usb_device(dev);
+    d->dev = libusb_get_device(dev);
 }
 
 int Context::set_baud_rate(int baudrate)
@@ -175,6 +178,26 @@ int Context::set_line_property(enum ftdi_bits_type bits, enum ftdi_stopbits_type
 int Context::set_line_property(enum ftdi_bits_type bits, enum ftdi_stopbits_type sbit, enum ftdi_parity_type parity, enum ftdi_break_type break_type)
 {
     return ftdi_set_line_property2(d->ftdi, bits, sbit, parity, break_type);
+}
+
+int Context::get_usb_read_timeout() const
+{
+    return d->ftdi->usb_read_timeout;
+}
+
+void Context::set_usb_read_timeout(int usb_read_timeout)
+{
+    d->ftdi->usb_read_timeout = usb_read_timeout;
+}
+
+int Context::get_usb_write_timeout() const
+{
+    return d->ftdi->usb_write_timeout;
+}
+
+void Context::set_usb_write_timeout(int usb_write_timeout)
+{
+    d->ftdi->usb_write_timeout = usb_write_timeout;
 }
 
 int Context::read(unsigned char *buf, int size)
@@ -271,16 +294,6 @@ int Context::set_error_char(unsigned char errorch, unsigned char enable)
     return ftdi_set_error_char(d->ftdi, errorch, enable);
 }
 
-int Context::bitbang_enable(unsigned char bitmask)
-{
-    return ftdi_set_bitmode(d->ftdi, bitmask, BITMODE_BITBANG);
-}
-
-int Context::bitbang_disable()
-{
-    return ftdi_disable_bitbang(d->ftdi);
-}
-
 int Context::set_bitmode(unsigned char bitmask, unsigned char mode)
 {
     return ftdi_set_bitmode(d->ftdi, bitmask, mode);
@@ -289,6 +302,11 @@ int Context::set_bitmode(unsigned char bitmask, unsigned char mode)
 int Context::set_bitmode(unsigned char bitmask, enum ftdi_mpsse_mode mode)
 {
     return ftdi_set_bitmode(d->ftdi, bitmask, mode);
+}
+
+int Context::bitbang_disable()
+{
+    return ftdi_disable_bitbang(d->ftdi);
 }
 
 int Context::read_pins(unsigned char *pins)
@@ -320,6 +338,11 @@ int Context::get_strings()
 
 int Context::get_strings_and_reopen()
 {
+    if ( d->dev == 0 )
+    {
+        d->dev = libusb_get_device(d->ftdi->usb_dev);
+    }
+
     // Get device strings (closes device)
     int ret=get_strings();
     if (ret < 0)
@@ -362,7 +385,7 @@ void Context::set_context(struct ftdi_context* context)
     d->ftdi = context;
 }
 
-void Context::set_usb_device(struct usb_device *dev)
+void Context::set_usb_device(struct libusb_device *dev)
 {
     d->dev = dev;
 }
@@ -393,19 +416,9 @@ Eeprom::~Eeprom()
 {
 }
 
-void Eeprom::init_defaults()
+int Eeprom::init_defaults(char* manufacturer, char *product, char * serial)
 {
-    return ftdi_eeprom_initdefaults(&d->eeprom);
-}
-
-void Eeprom::set_size(int size)
-{
-    return ftdi_eeprom_setsize(d->context, &d->eeprom, size);
-}
-
-int Eeprom::size(unsigned char *eeprom, int maxsize)
-{
-    return ftdi_read_eeprom_getsize(d->context, eeprom, maxsize);
+    return ftdi_eeprom_initdefaults(d->context, manufacturer, product, serial);
 }
 
 int Eeprom::chip_id(unsigned int *chipid)
@@ -415,17 +428,17 @@ int Eeprom::chip_id(unsigned int *chipid)
 
 int Eeprom::build(unsigned char *output)
 {
-    return ftdi_eeprom_build(&d->eeprom, output);
+    return ftdi_eeprom_build(d->context);
 }
 
 int Eeprom::read(unsigned char *eeprom)
 {
-    return ftdi_read_eeprom(d->context, eeprom);
+    return ftdi_read_eeprom(d->context);
 }
 
 int Eeprom::write(unsigned char *eeprom)
 {
-    return ftdi_write_eeprom(d->context, eeprom);
+    return ftdi_write_eeprom(d->context);
 }
 
 int Eeprom::read_location(int eeprom_addr, unsigned short *eeprom_val)
@@ -627,13 +640,10 @@ List::iterator List::erase(iterator beg, iterator end)
     return d->list.erase(beg, end);
 }
 
-List* List::find_all(int vendor, int product)
+List* List::find_all(Context &context, int vendor, int product)
 {
     struct ftdi_device_list* dlist = 0;
-    struct ftdi_context ftdi;
-    ftdi_init(&ftdi);
-    ftdi_usb_find_all(&ftdi, &dlist, vendor, product);
-    ftdi_deinit(&ftdi);
+    ftdi_usb_find_all(context.context(), &dlist, vendor, product);
     return new List(dlist);
 }
 
