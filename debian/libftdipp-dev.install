@@ -1,4 +1,4 @@
-usr/include/*.hpp
+usr/include/libftdi/*.hpp
 usr/lib/*/libftdipp.a
 usr/lib/*/libftdipp.so
 usr/lib/*/pkgconfig/libftdipp.pc

@@ -2,19 +2,26 @@ Source: libftdi
 Section: libs
 Priority: optional
 Maintainer: Aurelien Jarno <aurel32@debian.org>
-Build-Depends: debhelper (>= 8.1.3), libusb-dev (>= 2:0.1.11), pkg-config (>= 0.18), doxygen, libboost-dev, swig, python-all-dev (>= 2.2.6.6-3~), dh-autoreconf
-Standards-Version: 3.9.3
+Build-Depends: debhelper (>= 9),
+ dh-python,
+ doxygen,
+ libboost-dev,
+ libconfuse-dev,
+ libusb-1.0-0-dev,
+ pkg-config (>= 0.18),
+ python-dev (>= 2.6.6-3~),
+ swig,
+Standards-Version: 3.9.5
 Homepage: http://www.intra2net.com/en/developer/libftdi/
-X-Python-Version: >= 2.4
 
-Package: libftdi1
+Package: libftdi2
 Section: libs
 Architecture: any
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
 Depends: ${shlibs:Depends}, ${misc:Depends}
 Description: Library to control and program the FTDI USB controller
- This library could talk to FTDI's FT232 and FT245 type USB chips from 
+ This library could talk to FTDI's FT232 and FT245 type USB chips from
  userspace. It uses libusb to communicate with the chips.
  .
  Functionalities include the possibility to use the chips in standard
@@ -25,32 +32,32 @@ Description: Library to control and program the FTDI USB controller
 Package: libftdi-dev
 Section: libdevel
 Architecture: any
-Depends: libftdi1 (= ${binary:Version}), libusb-dev (>= 0.1.11), ${misc:Depends}
+Depends: libftdi2 (= ${binary:Version}), libusb-1.0-0-dev, ${misc:Depends}
 Description: Development files for libftdi
  This package contains the header files and static library needed to
  compile applications that use libftdi.
 
-Package: libftdi1-dbg
+Package: libftdi2-dbg
 Section: debug
 Priority: extra
 Architecture: any
 Multi-Arch: same
-Depends: libftdi1 (= ${binary:Version}), ${misc:Depends}
-Description: Debugging symbols for libftdi1
+Depends: libftdi2 (= ${binary:Version}), ${misc:Depends}
+Description: Debugging symbols for libftdi2
  This package contains unstripped shared libraries. it is provided
  primarily to provide a backtrace with names in a debugger, this makes
  it somewhat easier to interpret core dumps. The libraries are installed
  in /usr/lib/debug and can be used by placing that directory in
  LD_LIBRARY_PATH.
 
-Package: libftdipp1
+Package: libftdipp2
 Section: libs
 Architecture: any
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
 Depends: ${shlibs:Depends}, ${misc:Depends}
 Description: Library to control and program the FTDI USB controller
- This library could talk to FTDI's FT232 and FT245 type USB chips from 
+ This library could talk to FTDI's FT232 and FT245 type USB chips from
  userspace. It uses libusb to communicate with the chips.
  .
  Functionalities include the possibility to use the chips in standard
@@ -61,18 +68,18 @@ Description: Library to control and program the FTDI USB controller
 Package: libftdipp-dev
 Section: libdevel
 Architecture: any
-Depends: libftdipp1 (= ${binary:Version}), libftdi-dev (= ${binary:Version}), libboost-dev (>= 1.33), ${misc:Depends}
+Depends: libftdipp2 (= ${binary:Version}), libftdi-dev (= ${binary:Version}), libboost-dev (>= 1.33), ${misc:Depends}
 Description: Development files for libftdipp
  This package contains the header files and static library needed to
  compile applications that use libftdipp.
 
-Package: libftdipp1-dbg
+Package: libftdipp2-dbg
 Section: debug
 Priority: extra
 Architecture: any
 Multi-Arch: same
-Depends: libftdipp1 (= ${binary:Version}), ${misc:Depends}
-Description: Debugging symbols for libftdipp1
+Depends: libftdipp2 (= ${binary:Version}), ${misc:Depends}
+Description: Debugging symbols for libftdipp2
  This package contains unstripped shared libraries. it is provided
  primarily to provide a backtrace with names in a debugger, this makes
  it somewhat easier to interpret core dumps. The libraries are installed
@@ -85,7 +92,7 @@ Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}, ${python:Depends}
 Provides: ${python:Provides}
 Description: Python module to control and program the FTDI USB controller
- This Python module could talk to FTDI's FT232 and FT245 type USB chips from 
+ This Python module could talk to FTDI's FT232 and FT245 type USB chips from
  userspace. It uses libusb to communicate with the chips.
  .
  Functionalities include the possibility to use the chips in standard
