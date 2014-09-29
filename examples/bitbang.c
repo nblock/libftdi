@@ -1,58 +1,58 @@
 /* This program is distributed under the GPL, version 2 */
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <unistd.h>
-#ifdef __WIN32__
-#define sleep(x) Sleep(x)
-#endif
 #include <ftdi.h>
 
 int main(int argc, char **argv)
 {
-    struct ftdi_context ftdic;
+    struct ftdi_context *ftdi;
     int f,i;
-    char buf[1];
+    unsigned char buf[1];
+    int retval = 0;
 
-    if (ftdi_init(&ftdic) < 0)
+    if ((ftdi = ftdi_new()) == 0)
     {
-        fprintf(stderr, "ftdi_init failed\n");
+        fprintf(stderr, "ftdi_new failed\n");
         return EXIT_FAILURE;
     }
 
-    f = ftdi_usb_open(&ftdic, 0x0403, 0x6001);
+    f = ftdi_usb_open(ftdi, 0x0403, 0x6001);
 
     if (f < 0 && f != -5)
     {
-        fprintf(stderr, "unable to open ftdi device: %d (%s)\n", f, ftdi_get_error_string(&ftdic));
-        exit(-1);
+        fprintf(stderr, "unable to open ftdi device: %d (%s)\n", f, ftdi_get_error_string(ftdi));
+        retval = 1;
+        goto done;
     }
 
     printf("ftdi open succeeded: %d\n",f);
 
     printf("enabling bitbang mode\n");
-    ftdi_set_bitmode(&ftdic, 0xFF, BITMODE_BITBANG);
+    ftdi_set_bitmode(ftdi, 0xFF, BITMODE_BITBANG);
 
-    sleep(3);
+    usleep(3 * 1000000);
 
     buf[0] = 0x0;
     printf("turning everything on\n");
-    f = ftdi_write_data(&ftdic, buf, 1);
+    f = ftdi_write_data(ftdi, buf, 1);
     if (f < 0)
     {
-        fprintf(stderr,"write failed for 0x%x, error %d (%s)\n",buf[0],f, ftdi_get_error_string(&ftdic));
+        fprintf(stderr,"write failed for 0x%x, error %d (%s)\n",buf[0],f, ftdi_get_error_string(ftdi));
     }
 
-    sleep(3);
+    usleep(3 * 1000000);
 
     buf[0] = 0xFF;
     printf("turning everything off\n");
-    f = ftdi_write_data(&ftdic, buf, 1);
+    f = ftdi_write_data(ftdi, buf, 1);
     if (f < 0)
     {
-        fprintf(stderr,"write failed for 0x%x, error %d (%s)\n",buf[0],f, ftdi_get_error_string(&ftdic));
+        fprintf(stderr,"write failed for 0x%x, error %d (%s)\n",buf[0],f, ftdi_get_error_string(ftdi));
     }
 
-    sleep(3);
+    usleep(3 * 1000000);
 
     for (i = 0; i < 32; i++)
     {
@@ -63,19 +63,22 @@ int main(int argc, char **argv)
         }
         printf("%02hhx ",buf[0]);
         fflush(stdout);
-        f = ftdi_write_data(&ftdic, buf, 1);
+        f = ftdi_write_data(ftdi, buf, 1);
         if (f < 0)
         {
-            fprintf(stderr,"write failed for 0x%x, error %d (%s)\n",buf[0],f, ftdi_get_error_string(&ftdic));
+            fprintf(stderr,"write failed for 0x%x, error %d (%s)\n",buf[0],f, ftdi_get_error_string(ftdi));
         }
-        sleep(1);
+        usleep(1 * 1000000);
     }
 
     printf("\n");
 
     printf("disabling bitbang mode\n");
-    ftdi_disable_bitbang(&ftdic);
+    ftdi_disable_bitbang(ftdi);
 
-    ftdi_usb_close(&ftdic);
-    ftdi_deinit(&ftdic);
+    ftdi_usb_close(ftdi);
+done:
+    ftdi_free(ftdi);
+
+    return retval;
 }

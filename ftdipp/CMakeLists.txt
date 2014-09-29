@@ -1,89 +1,68 @@
 # Check
 set(FTDI_BUILD_CPP False PARENT_SCOPE)
 
-option(FTDIPP "Build C++ binding library libftdi++" ON)
+option ( FTDIPP "Build C++ binding library libftdi1++" ON )
 
+# Targets
+set(cpp_sources   ${CMAKE_CURRENT_SOURCE_DIR}/ftdi.cpp CACHE INTERNAL "List of cpp sources" )
+set(cpp_headers   ${CMAKE_CURRENT_SOURCE_DIR}/ftdi.hpp CACHE INTERNAL "List of cpp headers" )
+        
 if (FTDIPP)
+
+  if(Boost_FOUND)
 
     # Includes
     include_directories(BEFORE ${CMAKE_CURRENT_BINARY_DIR}
                         ${CMAKE_CURRENT_SOURCE_DIR}
-                        ${CMAKE_SOURCE_DIR}/src
-                        )
+                        ${CMAKE_SOURCE_DIR}/src)
 
-    # Targets
-    set(cpp_sources   ftdi.cpp)
-    set(cpp_headers   ftdi.hpp)
+    include_directories(${Boost_INCLUDE_DIRS})
 
-    # Find Boost
-    find_package(Boost)
-    if(Boost_FOUND)
+
+
     set(FTDI_BUILD_CPP True PARENT_SCOPE)
-    message(STATUS "Building libftdi++")
+    message(STATUS "Building libftdi1++")
 
-    # Targets
-    add_library(ftdipp SHARED ${cpp_sources})
+    # Shared library
+    add_library(ftdipp1 SHARED ${cpp_sources})
 
     math(EXPR VERSION_FIXUP "${MAJOR_VERSION} + 1")    # Compatiblity with previous releases
-    set_target_properties(ftdipp PROPERTIES VERSION ${VERSION_FIXUP}.${MINOR_VERSION}.0 SOVERSION 1)
-
-    # Static library
-    add_library(ftdipp-static STATIC ${cpp_sources})
-    set_target_properties(ftdipp-static PROPERTIES OUTPUT_NAME "ftdipp")
+    set_target_properties(ftdipp1 PROPERTIES VERSION ${VERSION_FIXUP}.${MINOR_VERSION}.0 SOVERSION 2)
 
     # Prevent clobbering each other during the build
-    set_target_properties(ftdipp PROPERTIES CLEAN_DIRECT_OUTPUT 1)
-    set_target_properties(ftdipp-static PROPERTIES CLEAN_DIRECT_OUTPUT 1)
+    set_target_properties(ftdipp1 PROPERTIES CLEAN_DIRECT_OUTPUT 1)
 
     # Dependencies
-    target_link_libraries(ftdipp ftdi ${LIBUSB_LIBRARIES} ${BOOST_LIBRARIES})
+    target_link_libraries(ftdipp1 ftdi1 ${LIBUSB_LIBRARIES} ${BOOST_LIBRARIES})
 
-    # Install
-    if(${UNIX})
+    
+    install ( TARGETS ftdipp1
+              RUNTIME DESTINATION bin
+              LIBRARY DESTINATION lib${LIB_SUFFIX}
+              ARCHIVE DESTINATION lib${LIB_SUFFIX}
+            )
+            
+    # Static library
+    if ( STATICLIBS )
+      add_library(ftdipp1-static STATIC ${cpp_sources})
+      set_target_properties(ftdipp1-static PROPERTIES OUTPUT_NAME "ftdipp1")
+      set_target_properties(ftdipp1-static PROPERTIES CLEAN_DIRECT_OUTPUT 1)
 
-    install( TARGETS ftdipp
-                LIBRARY DESTINATION lib${LIB_SUFFIX}
-                COMPONENT sharedlibs
-                )
-
-    install( TARGETS ftdipp-static
+      install ( TARGETS ftdipp1-static
                 ARCHIVE DESTINATION lib${LIB_SUFFIX}
                 COMPONENT staticlibs
-                )
+              )
+    endif ()
 
-    install( FILES ${cpp_headers}
-                DESTINATION include
-                COMPONENT headers
-                )
+    install ( FILES ${cpp_headers}
+              DESTINATION include/${PROJECT_NAME}
+              COMPONENT headers
+            )
 
-    endif(${UNIX})
+  else ()
+    message(STATUS "Boost not found, won't build libftdi1++")
+  endif ()
 
-    if(${WIN32})
-
-    install( TARGETS ftdipp
-                DESTINATION bin
-                COMPONENT sharedlibs
-                )
-
-    install( TARGETS ftdipp-static
-                DESTINATION bin
-                COMPONENT staticlibs
-                )
-
-    install( FILES ${cpp_headers}
-                DESTINATION include
-                COMPONENT headers
-                )
-
-    endif(${WIN32})
-
-    else(Boost_FOUND)
-    message(STATUS "Boost not found, won't build libftdi++")
-    endif(Boost_FOUND)
-
-else(FTDIPP)
-
-    message(STATUS "Not building libftdi++")
-
-endif(FTDIPP)
-
+else ()
+  message(STATUS "Not building libftdi1++")
+endif ()

@@ -6,25 +6,28 @@
 */
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <ftdi.h>
 
 int main(void)
 {
     int ret, i;
-    struct ftdi_context ftdic;
+    struct ftdi_context *ftdi;
     struct ftdi_device_list *devlist, *curdev;
     char manufacturer[128], description[128];
+    int retval = EXIT_SUCCESS;
 
-    if (ftdi_init(&ftdic) < 0)
+    if ((ftdi = ftdi_new()) == 0)
     {
-        fprintf(stderr, "ftdi_init failed\n");
+        fprintf(stderr, "ftdi_new failed\n");
         return EXIT_FAILURE;
     }
 
-    if ((ret = ftdi_usb_find_all(&ftdic, &devlist, 0x0403, 0x6001)) < 0)
+    if ((ret = ftdi_usb_find_all(ftdi, &devlist, 0, 0)) < 0)
     {
-        fprintf(stderr, "ftdi_usb_find_all failed: %d (%s)\n", ret, ftdi_get_error_string(&ftdic));
-        return EXIT_FAILURE;
+        fprintf(stderr, "ftdi_usb_find_all failed: %d (%s)\n", ret, ftdi_get_error_string(ftdi));
+        retval =  EXIT_FAILURE;
+        goto do_deinit;
     }
 
     printf("Number of FTDI devices found: %d\n", ret);
@@ -33,17 +36,19 @@ int main(void)
     for (curdev = devlist; curdev != NULL; i++)
     {
         printf("Checking device: %d\n", i);
-        if ((ret = ftdi_usb_get_strings(&ftdic, curdev->dev, manufacturer, 128, description, 128, NULL, 0)) < 0)
+        if ((ret = ftdi_usb_get_strings(ftdi, curdev->dev, manufacturer, 128, description, 128, NULL, 0)) < 0)
         {
-            fprintf(stderr, "ftdi_usb_get_strings failed: %d (%s)\n", ret, ftdi_get_error_string(&ftdic));
-            return EXIT_FAILURE;
+            fprintf(stderr, "ftdi_usb_get_strings failed: %d (%s)\n", ret, ftdi_get_error_string(ftdi));
+            retval = EXIT_FAILURE;
+            goto done;
         }
         printf("Manufacturer: %s, Description: %s\n\n", manufacturer, description);
         curdev = curdev->next;
     }
-
+done:
     ftdi_list_free(&devlist);
-    ftdi_deinit(&ftdic);
+do_deinit:
+    ftdi_free(ftdi);
 
-    return EXIT_SUCCESS;
+    return retval;
 }
