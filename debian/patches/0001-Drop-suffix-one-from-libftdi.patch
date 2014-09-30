@@ -1,0 +1,522 @@
+From: Florian Preinstorfer <fp@xell.at>
+Date: Mon, 29 Sep 2014 16:00:55 +0200
+Subject: Drop suffix one from libftdi.
+
+---
+ CMakeLists.txt                        | 41 +++++++++++++++++------------------
+ examples/CMakeLists.txt               | 22 +++++++++----------
+ examples/cmake_example/CMakeLists.txt |  2 +-
+ ftdi_eeprom/CMakeLists.txt            |  2 +-
+ ftdipp/CMakeLists.txt                 | 26 +++++++++++-----------
+ libftdi1-config.in                    |  4 ++--
+ libftdi1.pc.in                        |  4 ++--
+ libftdi1.spec.in                      | 30 ++++++++++++-------------
+ libftdipp1.pc.in                      |  8 +++----
+ python/CMakeLists.txt                 | 20 ++++++++---------
+ python/ftdi1.i                        |  4 ++--
+ src/CMakeLists.txt                    | 20 ++++++++---------
+ test/CMakeLists.txt                   |  8 +++----
+ 13 files changed, 95 insertions(+), 96 deletions(-)
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index e8688d4..b757114 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -1,8 +1,8 @@
+ # Project
+-project(libftdi1)
++project(libftdi)
+ set(MAJOR_VERSION 1)
+ set(MINOR_VERSION 1)
+-set(PACKAGE libftdi1)
++set(PACKAGE libftdi)
+ set(VERSION_STRING ${MAJOR_VERSION}.${MINOR_VERSION})
+ set(VERSION ${VERSION_STRING})
+ set ( CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake )
+@@ -38,7 +38,7 @@ set(CPACK_COMPONENT_HEADERS_DISPLAY_NAME "C++ Headers")
+ set(CPACK_COMPONENT_SHAREDLIBS_DESCRIPTION
+ "Shared library for general use.")
+ set(CPACK_COMPONENT_STATICLIBS_DESCRIPTION
+-"Static library, good if you want to embed libftdi1 in your application.")
++"Static library, good if you want to embed libftdi in your application.")
+ set(CPACK_COMPONENT_HEADERS_DESCRIPTION
+ "C/C++ header files.")
+ 
+@@ -73,7 +73,7 @@ endif(NOT APPLE)
+ # Package information
+ set(CPACK_PACKAGE_VERSION              ${VERSION_STRING})
+ set(CPACK_PACKAGE_CONTACT              "Intra2net AG <libftdi@developer.intra2net.com>")
+-set(CPACK_PACKAGE_DESCRIPTION          "libftdi1 library.")
++set(CPACK_PACKAGE_DESCRIPTION          "libftdi library.")
+ set(CPACK_PACKAGE_DESCRIPTION_SUMMARY  ${CPACK_PACKAGE_DESCRIPTION}
+                                        )
+ # Package settings
+@@ -89,9 +89,9 @@ if ( WIN32 )
+   set ( CPACK_CMAKE_GENERATOR              "MinGW Makefiles" )
+   set ( CPACK_PACKAGE_NAME                 "${PROJECT_NAME}" )
+   set ( CPACK_PACKAGE_VENDOR               "" )
+-  set ( CPACK_PACKAGE_INSTALL_DIRECTORY    "libftdi1" )
++  set ( CPACK_PACKAGE_INSTALL_DIRECTORY    "libftdi" )
+   set ( CPACK_PACKAGE_FILE_NAME            "${PROJECT_NAME}-${VERSION_STRING}-win32")
+-  set ( CPACK_NSIS_DISPLAY_NAME            "libftdi1" )
++  set ( CPACK_NSIS_DISPLAY_NAME            "libftdi" )
+   set ( CPACK_NSIS_MODIFY_PATH             ON )
+ endif ()
+ 
+@@ -164,33 +164,33 @@ if(${WIN32})
+    set(libdir      ${CMAKE_INSTALL_PREFIX}/bin)
+ endif(${WIN32})
+ 
+-configure_file(${CMAKE_SOURCE_DIR}/libftdi1.spec.in ${CMAKE_BINARY_DIR}/libftdi1.spec @ONLY)
+-configure_file(${CMAKE_SOURCE_DIR}/libftdi1.pc.in ${CMAKE_BINARY_DIR}/libftdi1.pc @ONLY)
+-configure_file(${CMAKE_SOURCE_DIR}/libftdipp1.pc.in ${CMAKE_BINARY_DIR}/libftdipp1.pc @ONLY)
+-install(FILES ${CMAKE_BINARY_DIR}/libftdi1.pc ${CMAKE_BINARY_DIR}/libftdipp1.pc
++configure_file(${CMAKE_SOURCE_DIR}/libftdi1.spec.in ${CMAKE_BINARY_DIR}/libftdi.spec @ONLY)
++configure_file(${CMAKE_SOURCE_DIR}/libftdi1.pc.in ${CMAKE_BINARY_DIR}/libftdi.pc @ONLY)
++configure_file(${CMAKE_SOURCE_DIR}/libftdipp1.pc.in ${CMAKE_BINARY_DIR}/libftdipp.pc @ONLY)
++install(FILES ${CMAKE_BINARY_DIR}/libftdi.pc ${CMAKE_BINARY_DIR}/libftdipp.pc
+         DESTINATION lib${LIB_SUFFIX}/pkgconfig)
+ 
+ if (UNIX OR MINGW)
+-  configure_file ( libftdi1-config.in ${CMAKE_CURRENT_BINARY_DIR}/libftdi1-config @ONLY )
+-  install ( PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/libftdi1-config
++  configure_file ( libftdi1-config.in ${CMAKE_CURRENT_BINARY_DIR}/libftdi-config @ONLY )
++  install ( PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/libftdi-config
+             DESTINATION bin )
+ endif ()
+ 
+ # config script install path
+ if ( NOT DEFINED LIBFTDI_CMAKE_CONFIG_DIR )
+-  set ( LIBFTDI_CMAKE_CONFIG_DIR lib${LIB_SUFFIX}/cmake/libftdi1 )
++  set ( LIBFTDI_CMAKE_CONFIG_DIR lib${LIB_SUFFIX}/cmake/libftdi )
+ endif ()
+ 
+ set ( LIBFTDI_INCLUDE_DIR ${includedir} )
+ set ( LIBFTDI_INCLUDE_DIRS ${LIBFTDI_INCLUDE_DIR} )
+-set ( LIBFTDI_LIBRARY ftdi1 )
++set ( LIBFTDI_LIBRARY ftdi )
+ set ( LIBFTDI_LIBRARIES ${LIBFTDI_LIBRARY} )
+ list ( APPEND LIBFTDI_LIBRARIES ${LIBUSB_LIBRARIES} )
+-set ( LIBFTDI_STATIC_LIBRARY ftdi1.a )
++set ( LIBFTDI_STATIC_LIBRARY ftdi.a )
+ set ( LIBFTDI_STATIC_LIBRARIES ${LIBFTDI_STATIC_LIBRARY} )
+ list ( APPEND LIBFTDI_STATIC_LIBRARIES ${LIBUSB_LIBRARIES} )
+ if (FTDI_BUILD_CPP)
+-  set ( LIBFTDIPP_LIBRARY ftdi1pp )
++  set ( LIBFTDIPP_LIBRARY ftdipp )
+   set ( LIBFTDIPP_LIBRARIES ${LIBFTDIPP_LIBRARY} )
+   list ( APPEND LIBFTDIPP_LIBRARIES ${LIBUSB_LIBRARIES} )
+ endif ()
+@@ -200,10 +200,9 @@ set ( LIBFTDI_VERSION_STRING ${VERSION_STRING} )
+ set ( LIBFTDI_VERSION_MAJOR ${MAJOR_VERSION} )
+ set ( LIBFTDI_VERSION_MINOR ${MINOR_VERSION} )
+ 
+-set ( LIBFTDI_USE_FILE ${CMAKE_INSTALL_PREFIX}/${LIBFTDI_CMAKE_CONFIG_DIR}/UseLibFTDI1.cmake )
+-configure_file ( cmake/LibFTDI1Config.cmake.in ${CMAKE_CURRENT_BINARY_DIR}/LibFTDI1Config.cmake @ONLY )
+-install ( FILES ${CMAKE_CURRENT_BINARY_DIR}/LibFTDI1Config.cmake cmake/UseLibFTDI1.cmake
+-          DESTINATION ${LIBFTDI_CMAKE_CONFIG_DIR}
+-        )
++set ( LIBFTDI_USE_FILE ${CMAKE_INSTALL_PREFIX}/${LIBFTDI_CMAKE_CONFIG_DIR}/UseLibFTDI.cmake )
++configure_file ( cmake/LibFTDI1Config.cmake.in ${CMAKE_CURRENT_BINARY_DIR}/LibFTDIConfig.cmake @ONLY )
++install ( FILES ${CMAKE_CURRENT_BINARY_DIR}/LibFTDIConfig.cmake DESTINATION ${LIBFTDI_CMAKE_CONFIG_DIR})
++install ( FILES cmake/UseLibFTDI1.cmake DESTINATION ${LIBFTDI_CMAKE_CONFIG_DIR} RENAME UseLibFTDI.cmake)
+ 
+ include(CPack)
+diff --git a/examples/CMakeLists.txt b/examples/CMakeLists.txt
+index 1263c62..77f6e58 100644
+--- a/examples/CMakeLists.txt
++++ b/examples/CMakeLists.txt
+@@ -21,16 +21,16 @@ if (EXAMPLES)
+     add_executable(eeprom eeprom.c)
+ 
+     # Linkage
+-    target_link_libraries(simple ftdi1)
+-    target_link_libraries(bitbang ftdi1)
+-    target_link_libraries(bitbang2 ftdi1)
+-    target_link_libraries(bitbang_cbus ftdi1)
+-    target_link_libraries(bitbang_ft2232 ftdi1)
+-    target_link_libraries(find_all ftdi1)
+-    target_link_libraries(serial_test ftdi1)
+-    target_link_libraries(baud_test ftdi1)
+-    target_link_libraries(stream_test ftdi1)
+-    target_link_libraries(eeprom ftdi1)
++    target_link_libraries(simple ftdi)
++    target_link_libraries(bitbang ftdi)
++    target_link_libraries(bitbang2 ftdi)
++    target_link_libraries(bitbang_cbus ftdi)
++    target_link_libraries(bitbang_ft2232 ftdi)
++    target_link_libraries(find_all ftdi)
++    target_link_libraries(serial_test ftdi)
++    target_link_libraries(baud_test ftdi)
++    target_link_libraries(stream_test ftdi)
++    target_link_libraries(eeprom ftdi)
+ 
+     # libftdi++ examples
+     if(FTDI_BUILD_CPP)
+@@ -43,7 +43,7 @@ if (EXAMPLES)
+             add_executable(find_all_pp find_all_pp.cpp)
+ 
+             # Linkage
+-            target_link_libraries(find_all_pp ftdipp1)
++            target_link_libraries(find_all_pp ftdipp)
+         endif(Boost_FOUND)
+     endif(FTDI_BUILD_CPP)
+ 
+diff --git a/examples/cmake_example/CMakeLists.txt b/examples/cmake_example/CMakeLists.txt
+index fe203ed..3096f76 100644
+--- a/examples/cmake_example/CMakeLists.txt
++++ b/examples/cmake_example/CMakeLists.txt
+@@ -2,7 +2,7 @@ cmake_minimum_required ( VERSION 2.8 )
+ 
+ project ( example C )
+ 
+-find_package ( LibFTDI1 NO_MODULE REQUIRED )
++find_package ( LibFTDI NO_MODULE REQUIRED )
+ include ( ${LIBFTDI_USE_FILE} )
+ 
+ add_executable ( example main.c )
+diff --git a/ftdi_eeprom/CMakeLists.txt b/ftdi_eeprom/CMakeLists.txt
+index 6c59e2c..7e45528 100644
+--- a/ftdi_eeprom/CMakeLists.txt
++++ b/ftdi_eeprom/CMakeLists.txt
+@@ -35,7 +35,7 @@ if ( CONFUSE_FOUND )
+   )
+ 
+   add_executable ( ftdi_eeprom main.c )
+-  target_link_libraries ( ftdi_eeprom ftdi1 ${CONFUSE_LIBRARIES} )
++  target_link_libraries ( ftdi_eeprom ftdi ${CONFUSE_LIBRARIES} )
+   if ( LIBINTL_FOUND )
+     target_link_libraries ( ftdi_eeprom ${LIBINTL_LIBRARIES} )
+   endif ()
+diff --git a/ftdipp/CMakeLists.txt b/ftdipp/CMakeLists.txt
+index 7500211..ab8076f 100644
+--- a/ftdipp/CMakeLists.txt
++++ b/ftdipp/CMakeLists.txt
+@@ -1,7 +1,7 @@
+ # Check
+ set(FTDI_BUILD_CPP False PARENT_SCOPE)
+ 
+-option ( FTDIPP "Build C++ binding library libftdi1++" ON )
++option ( FTDIPP "Build C++ binding library libftdi++" ON )
+ 
+ # Targets
+ set(cpp_sources   ${CMAKE_CURRENT_SOURCE_DIR}/ftdi.cpp CACHE INTERNAL "List of cpp sources" )
+@@ -21,22 +21,22 @@ if (FTDIPP)
+ 
+ 
+     set(FTDI_BUILD_CPP True PARENT_SCOPE)
+-    message(STATUS "Building libftdi1++")
++    message(STATUS "Building libftdi++")
+ 
+     # Shared library
+-    add_library(ftdipp1 SHARED ${cpp_sources})
++    add_library(ftdipp SHARED ${cpp_sources})
+ 
+     math(EXPR VERSION_FIXUP "${MAJOR_VERSION} + 1")    # Compatiblity with previous releases
+-    set_target_properties(ftdipp1 PROPERTIES VERSION ${VERSION_FIXUP}.${MINOR_VERSION}.0 SOVERSION 2)
++    set_target_properties(ftdipp PROPERTIES VERSION ${VERSION_FIXUP}.${MINOR_VERSION}.0 SOVERSION 2)
+ 
+     # Prevent clobbering each other during the build
+-    set_target_properties(ftdipp1 PROPERTIES CLEAN_DIRECT_OUTPUT 1)
++    set_target_properties(ftdipp PROPERTIES CLEAN_DIRECT_OUTPUT 1)
+ 
+     # Dependencies
+-    target_link_libraries(ftdipp1 ftdi1 ${LIBUSB_LIBRARIES} ${BOOST_LIBRARIES})
++    target_link_libraries(ftdipp ftdi ${LIBUSB_LIBRARIES} ${BOOST_LIBRARIES})
+ 
+     
+-    install ( TARGETS ftdipp1
++    install ( TARGETS ftdipp
+               RUNTIME DESTINATION bin
+               LIBRARY DESTINATION lib${LIB_SUFFIX}
+               ARCHIVE DESTINATION lib${LIB_SUFFIX}
+@@ -44,11 +44,11 @@ if (FTDIPP)
+             
+     # Static library
+     if ( STATICLIBS )
+-      add_library(ftdipp1-static STATIC ${cpp_sources})
+-      set_target_properties(ftdipp1-static PROPERTIES OUTPUT_NAME "ftdipp1")
+-      set_target_properties(ftdipp1-static PROPERTIES CLEAN_DIRECT_OUTPUT 1)
++      add_library(ftdipp-static STATIC ${cpp_sources})
++      set_target_properties(ftdipp-static PROPERTIES OUTPUT_NAME "ftdipp")
++      set_target_properties(ftdipp-static PROPERTIES CLEAN_DIRECT_OUTPUT 1)
+ 
+-      install ( TARGETS ftdipp1-static
++      install ( TARGETS ftdipp-static
+                 ARCHIVE DESTINATION lib${LIB_SUFFIX}
+                 COMPONENT staticlibs
+               )
+@@ -60,9 +60,9 @@ if (FTDIPP)
+             )
+ 
+   else ()
+-    message(STATUS "Boost not found, won't build libftdi1++")
++    message(STATUS "Boost not found, won't build libftdi++")
+   endif ()
+ 
+ else ()
+-  message(STATUS "Not building libftdi1++")
++  message(STATUS "Not building libftdi++")
+ endif ()
+diff --git a/libftdi1-config.in b/libftdi1-config.in
+index a3e2058..a71de4e 100644
+--- a/libftdi1-config.in
++++ b/libftdi1-config.in
+@@ -7,7 +7,7 @@ exec_prefix_set=no
+ usage()
+ {
+ 	cat <<EOF
+-Usage: libftdi1-config [OPTIONS] [LIBRARIES]
++Usage: libftdi-config [OPTIONS] [LIBRARIES]
+ Options:
+ 	[--prefix[=DIR]]
+ 	[--exec-prefix[=DIR]]
+@@ -75,5 +75,5 @@ if test "$echo_cflags" = "yes"; then
+ 	echo $includes
+ fi
+ if test "$echo_libs" = "yes"; then
+-	echo -L@libdir@ -lftdi1 @LIBS@
++	echo -L@libdir@ -lftdi @LIBS@
+ fi
+diff --git a/libftdi1.pc.in b/libftdi1.pc.in
+index 13f616c..de2fc9b 100644
+--- a/libftdi1.pc.in
++++ b/libftdi1.pc.in
+@@ -3,9 +3,9 @@ exec_prefix=@exec_prefix@
+ libdir=@libdir@
+ includedir=@includedir@
+ 
+-Name: libftdi1
++Name: libftdi
+ Description: Library to program and control the FTDI USB controller
+ Requires: libusb-1.0
+ Version: @VERSION@
+-Libs: -L${libdir} -lftdi1
++Libs: -L${libdir} -lftdi
+ Cflags: -I${includedir}
+diff --git a/libftdi1.spec.in b/libftdi1.spec.in
+index e5c45b1..f4600b8 100644
+--- a/libftdi1.spec.in
++++ b/libftdi1.spec.in
+@@ -1,7 +1,7 @@
+ %{!?python_sitearch: %define python_sitearch %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib(1)")}
+ 
+ Summary:   Library to program and control the FTDI USB controller
+-Name:      libftdi1
++Name:      libftdi
+ Version:   @VERSION@
+ Release:   1
+ License:   LGPL for libftdi and GPLv2+linking exception for the C++ wrapper
+@@ -16,9 +16,9 @@ Prefix:    /usr
+ URL:       http://www.intra2net.com/en/developer/libftdi
+ 
+ %package   devel
+-Summary:   Header files and static libraries for libftdi1
++Summary:   Header files and static libraries for libftdi
+ Group:     Development/Libraries
+-Requires:  libftdi1 = %{version}, libusb1-devel
++Requires:  libftdi = %{version}, libusb1-devel
+ 
+ %package python
+ Summary: Python bindings for libftdi
+@@ -30,10 +30,10 @@ Requires: %{name} = %{version}-%{release}
+ Library to program and control the FTDI USB controller
+ 
+ %description devel
+-Header files and static libraries for libftdi1
++Header files and static libraries for libftdi
+ 
+ %description python
+-Python bindings for libftdi1 generated by SWIG
++Python bindings for libftdi generated by SWIG
+ 
+ %prep
+ %setup -q
+@@ -73,23 +73,23 @@ rm -fr $RPM_BUILD_ROOT
+ %files
+ %defattr(-,root,root)
+ %doc COPYING.LIB COPYING.GPL LICENSE
+-%{_libdir}/libftdi1*.so*
+-%{_libdir}/libftdipp1*.so*
++%{_libdir}/libftdi*.so*
++%{_libdir}/libftdipp*.so*
+ 
+ %files devel
+ %defattr(-,root,root)
+ %doc build/doc/html build/doc/man
+ %{_bindir}/ftdi_eeprom
+-%{_bindir}/libftdi1-config
+-%{prefix}/include/libftdi1/*.h
+-%{prefix}/include/libftdi1/*.hpp
++%{_bindir}/libftdi-config
++%{prefix}/include/libftdi/*.h
++%{prefix}/include/libftdi/*.hpp
+ %{prefix}/share/libftdi/examples/*
+-%{_libdir}/libftdi1*.*a
+-%{_libdir}/libftdipp1*.*a
++%{_libdir}/libftdi*.*a
++%{_libdir}/libftdipp*.*a
+ %{_libdir}/pkgconfig/*.pc
+-%{_libdir}/cmake/libftdi1/*
++%{_libdir}/cmake/libftdi/*
+ 
+ %files python
+ %defattr(-,root,root,-)
+-%attr(755,root,root) %{python_sitearch}/_ftdi1.so
+-%{python_sitearch}/ftdi1.py*
++%attr(755,root,root) %{python_sitearch}/_ftdi.so
++%{python_sitearch}/ftdi.py*
+diff --git a/libftdipp1.pc.in b/libftdipp1.pc.in
+index 8158f38..ee81fef 100644
+--- a/libftdipp1.pc.in
++++ b/libftdipp1.pc.in
+@@ -3,9 +3,9 @@ exec_prefix=@exec_prefix@
+ libdir=@libdir@
+ includedir=@includedir@
+ 
+-Name: libftdipp1
+-Description: C++ wrapper for libftdi1
+-Requires: libftdi1
++Name: libftdipp
++Description: C++ wrapper for libftdi
++Requires: libftdi
+ Version: @VERSION@
+-Libs: -L${libdir} -lftdipp1
++Libs: -L${libdir} -lftdipp
+ Cflags: -I${includedir}
+diff --git a/python/CMakeLists.txt b/python/CMakeLists.txt
+index 1073ed3..efa7885 100644
+--- a/python/CMakeLists.txt
++++ b/python/CMakeLists.txt
+@@ -22,14 +22,14 @@ if ( SWIG_FOUND AND PYTHONLIBS_FOUND AND PYTHONINTERP_FOUND )
+   include_directories ( ${PYTHON_INCLUDE_DIRS} )
+   link_directories ( ${CMAKE_CURRENT_BINARY_DIR}/../src )
+ 
+-  swig_add_module ( ftdi1 python ftdi1.i )
+-  swig_link_libraries ( ftdi1 ftdi1 )
++  swig_add_module ( ftdi python ftdi1.i )
++  swig_link_libraries ( ftdi ftdi )
+ 
+   if ( LINK_PYTHON_LIBRARY )
+-    swig_link_libraries ( ftdi1 ${PYTHON_LIBRARIES} )
++    swig_link_libraries ( ftdi ${PYTHON_LIBRARIES} )
+   endif ()
+ 
+-  set_target_properties ( ${SWIG_MODULE_ftdi1_REAL_NAME} PROPERTIES NO_SONAME ON )
++  set_target_properties ( ${SWIG_MODULE_ftdi_REAL_NAME} PROPERTIES NO_SONAME ON )
+ 
+   execute_process ( COMMAND ${PYTHON_EXECUTABLE} -c "from distutils import sysconfig; print( sysconfig.get_python_lib( plat_specific=True, prefix='${CMAKE_INSTALL_PREFIX}' ) )"
+                     OUTPUT_VARIABLE _ABS_PYTHON_MODULE_PATH
+@@ -42,8 +42,8 @@ if ( SWIG_FOUND AND PYTHONLIBS_FOUND AND PYTHONINTERP_FOUND )
+         ${_REL_PYTHON_MODULE_PATH}
+       )
+ 
+-  install ( FILES ${CMAKE_CURRENT_BINARY_DIR}/ftdi1.py DESTINATION ${PYTHON_MODULE_PATH} )
+-  install ( TARGETS ${SWIG_MODULE_ftdi1_REAL_NAME} LIBRARY DESTINATION ${PYTHON_MODULE_PATH} )
++  install ( FILES ${CMAKE_CURRENT_BINARY_DIR}/ftdi.py DESTINATION ${PYTHON_MODULE_PATH} )
++  install ( TARGETS ${SWIG_MODULE_ftdi_REAL_NAME} LIBRARY DESTINATION ${PYTHON_MODULE_PATH} )
+ 
+   if ( DOCUMENTATION AND DOXYGEN_FOUND )
+ 
+@@ -58,14 +58,14 @@ if ( SWIG_FOUND AND PYTHONLIBS_FOUND AND PYTHONINTERP_FOUND )
+       )
+ 
+       # generate .i from doxygen .xml
+-      add_custom_command ( OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/ftdi1_doc.i
++      add_custom_command ( OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/ftdi_doc.i
+           COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/doxy2swig.py -n
+               ${CMAKE_BINARY_DIR}/doc/xml/ftdi_8c.xml
+-              ${CMAKE_CURRENT_BINARY_DIR}/ftdi1_doc.i
++              ${CMAKE_CURRENT_BINARY_DIR}/ftdi_doc.i
+           DEPENDS ${CMAKE_BINARY_DIR}/doc/xml/ftdi_8c.xml
+       )
+-      add_custom_target ( doc_i DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/ftdi1_doc.i )
+-      add_dependencies( ${SWIG_MODULE_ftdi1_REAL_NAME} doc_i )
++      add_custom_target ( doc_i DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/ftdi_doc.i )
++      add_dependencies( ${SWIG_MODULE_ftdi_REAL_NAME} doc_i )
+ 
+   endif ()
+ 
+diff --git a/python/ftdi1.i b/python/ftdi1.i
+index 1e820dd..9729f54 100644
+--- a/python/ftdi1.i
++++ b/python/ftdi1.i
+@@ -1,10 +1,10 @@
+ /* File: ftdi1.i */
+ 
+-%module(docstring="Python interface to libftdi1") ftdi1
++%module(docstring="Python interface to libftdi") ftdi
+ %feature("autodoc","1");
+ 
+ #ifdef DOXYGEN
+-%include "ftdi1_doc.i"
++%include "ftdi_doc.i"
+ #endif
+ 
+ %{
+diff --git a/src/CMakeLists.txt b/src/CMakeLists.txt
+index 9fd86a6..cfbcb5a 100644
+--- a/src/CMakeLists.txt
++++ b/src/CMakeLists.txt
+@@ -21,29 +21,29 @@ configure_file(ftdi_version_i.h.in "${CMAKE_CURRENT_BINARY_DIR}/ftdi_version_i.h
+ set(c_sources     ${CMAKE_CURRENT_SOURCE_DIR}/ftdi.c ${CMAKE_CURRENT_SOURCE_DIR}/ftdi_stream.c CACHE INTERNAL "List of c sources" )
+ set(c_headers     ${CMAKE_CURRENT_SOURCE_DIR}/ftdi.h CACHE INTERNAL "List of c headers" )
+ 
+-add_library(ftdi1 SHARED ${c_sources})
++add_library(ftdi SHARED ${c_sources})
+ 
+ math(EXPR VERSION_FIXUP "${MAJOR_VERSION} + 1")    # Compatiblity with previous releases
+-set_target_properties(ftdi1 PROPERTIES VERSION ${VERSION_FIXUP}.${MINOR_VERSION}.0 SOVERSION 2)
++set_target_properties(ftdi PROPERTIES VERSION ${VERSION_FIXUP}.${MINOR_VERSION}.0 SOVERSION 2)
+ # Prevent clobbering each other during the build
+-set_target_properties ( ftdi1 PROPERTIES CLEAN_DIRECT_OUTPUT 1 )
++set_target_properties ( ftdi PROPERTIES CLEAN_DIRECT_OUTPUT 1 )
+ 
+ 
+ # Dependencies
+-target_link_libraries(ftdi1 ${LIBUSB_LIBRARIES})
++target_link_libraries(ftdi ${LIBUSB_LIBRARIES})
+ 
+-install ( TARGETS ftdi1
++install ( TARGETS ftdi
+           RUNTIME DESTINATION bin
+           LIBRARY DESTINATION lib${LIB_SUFFIX}
+           ARCHIVE DESTINATION lib${LIB_SUFFIX}
+         )
+ 
+ if ( STATICLIBS )
+-  add_library(ftdi1-static STATIC ${c_sources})
+-  target_link_libraries(ftdi1-static ${LIBUSB_LIBRARIES})
+-  set_target_properties(ftdi1-static PROPERTIES OUTPUT_NAME "ftdi1")
+-  set_target_properties(ftdi1-static PROPERTIES CLEAN_DIRECT_OUTPUT 1)
+-  install ( TARGETS ftdi1-static
++  add_library(ftdi-static STATIC ${c_sources})
++  target_link_libraries(ftdi-static ${LIBUSB_LIBRARIES})
++  set_target_properties(ftdi-static PROPERTIES OUTPUT_NAME "ftdi")
++  set_target_properties(ftdi-static PROPERTIES CLEAN_DIRECT_OUTPUT 1)
++  install ( TARGETS ftdi-static
+             ARCHIVE DESTINATION lib${LIB_SUFFIX}
+             COMPONENT staticlibs
+           )
+diff --git a/test/CMakeLists.txt b/test/CMakeLists.txt
+index 53e3f7b..8737f66 100644
+--- a/test/CMakeLists.txt
++++ b/test/CMakeLists.txt
+@@ -15,13 +15,13 @@ if(Boost_UNIT_TEST_FRAMEWORK_FOUND)
+         baudrate.cpp
+     )
+ 
+-    add_executable(test_libftdi1 ${cpp_tests})
+-    target_link_libraries(test_libftdi1 ftdi1 ${Boost_UNIT_TEST_FRAMEWORK_LIBRARIES})
++    add_executable(test_libftdi ${cpp_tests})
++    target_link_libraries(test_libftdi ftdi ${Boost_UNIT_TEST_FRAMEWORK_LIBRARIES})
+ 
+-    add_test(test_libftdi1 test_libftdi1)
++    add_test(test_libftdi test_libftdi)
+ 
+     # Add custom target so we run easily run "make check"
+-    add_custom_target(check COMMAND ${CMAKE_CTEST_COMMAND} DEPENDS test_libftdi1)
++    add_custom_target(check COMMAND ${CMAKE_CTEST_COMMAND} DEPENDS test_libftdi)
+ 
+ else(Boost_UNIT_TEST_FRAMEWORK_FOUND)
+ 
