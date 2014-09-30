@@ -15,6 +15,15 @@ Build-Depends: debhelper (>= 9),
 Standards-Version: 3.9.5
 Homepage: http://www.intra2net.com/en/developer/libftdi/
 
+Package: ftdi-eeprom
+Architecture: any
+Replaces: ftdi-eeprom (<< 1.0-1)
+Depends: ${shlibs:Depends}, ${misc:Depends}, libftdi2 (= ${binary:Version})
+Description: Tool for reading/erasing/flashing FTDI USB chip EEPROMs
+ ftdi-eeprom is a small tool for creating and uploading the configuration
+ EEPROM for the FTDI chip. This EEPROM contains information such as vendor
+ and product ID, manufacturer and product strings, revision, etc.
+
 Package: libftdi2
 Section: libs
 Architecture: any
