@@ -113,6 +113,8 @@ add_custom_target(dist
             | bzip2 > ${CMAKE_BINARY_DIR}/${ARCHIVE_NAME}.tar.bz2
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
 
+# Tests
+option ( BUILD_TESTS "Build unit tests with Boost Unit Test framework" ON )
 
 # Documentation
 option ( DOCUMENTATION "Generate API documentation with Doxygen" ON )
@@ -190,7 +192,7 @@ set ( LIBFTDI_STATIC_LIBRARY ftdi1.a )
 set ( LIBFTDI_STATIC_LIBRARIES ${LIBFTDI_STATIC_LIBRARY} )
 list ( APPEND LIBFTDI_STATIC_LIBRARIES ${LIBUSB_LIBRARIES} )
 if (FTDI_BUILD_CPP)
-  set ( LIBFTDIPP_LIBRARY ftdi1pp )
+  set ( LIBFTDIPP_LIBRARY ftdipp1 )
   set ( LIBFTDIPP_LIBRARIES ${LIBFTDIPP_LIBRARY} )
   list ( APPEND LIBFTDIPP_LIBRARIES ${LIBUSB_LIBRARIES} )
 endif ()
@@ -201,9 +203,42 @@ set ( LIBFTDI_VERSION_MAJOR ${MAJOR_VERSION} )
 set ( LIBFTDI_VERSION_MINOR ${MINOR_VERSION} )
 
 set ( LIBFTDI_USE_FILE ${CMAKE_INSTALL_PREFIX}/${LIBFTDI_CMAKE_CONFIG_DIR}/UseLibFTDI1.cmake )
-configure_file ( cmake/LibFTDI1Config.cmake.in ${CMAKE_CURRENT_BINARY_DIR}/LibFTDI1Config.cmake @ONLY )
-install ( FILES ${CMAKE_CURRENT_BINARY_DIR}/LibFTDI1Config.cmake cmake/UseLibFTDI1.cmake
+
+if(CMAKE_VERSION VERSION_LESS 2.8.8) 
+  configure_file ( cmake/LibFTDI1Config.cmake.in ${CMAKE_CURRENT_BINARY_DIR}/LibFTDI1Config.cmake @ONLY )
+  configure_file ( cmake/LibFTDI1ConfigVersion.cmake.in ${CMAKE_CURRENT_BINARY_DIR}/LibFTDI1ConfigVersion.cmake @ONLY )
+else ()
+  include(CMakePackageConfigHelpers)    
+  
+  configure_package_config_file (
+    cmake/LibFTDI1Config.cmake.in
+    ${CMAKE_CURRENT_BINARY_DIR}/LibFTDI1Config.cmake
+    INSTALL_DESTINATION ${LIBFTDI_CMAKE_CONFIG_DIR}
+    PATH_VARS
+      LIBFTDI_USE_FILE
+      LIBFTDI_ROOT_DIR
+      LIBFTDI_INCLUDE_DIR
+      LIBFTDI_INCLUDE_DIRS
+      LIBFTDI_LIBRARY_DIRS
+    NO_CHECK_REQUIRED_COMPONENTS_MACRO
+  )
+  write_basic_package_version_file (
+    LibFTDI1ConfigVersion.cmake 
+    VERSION ${LIBFTDI_VERSION_STRING} 
+    COMPATIBILITY AnyNewerVersion
+  ) 
+endif ()        
+
+
+install ( FILES 
+            ${CMAKE_CURRENT_BINARY_DIR}/LibFTDI1Config.cmake
+            ${CMAKE_CURRENT_BINARY_DIR}/LibFTDI1ConfigVersion.cmake
+            cmake/UseLibFTDI1.cmake
+            
           DESTINATION ${LIBFTDI_CMAKE_CONFIG_DIR}
         )
 
+
+        
+        
 include(CPack)
