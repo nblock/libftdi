@@ -118,7 +118,7 @@ enum ftdi_module_detach_mode
 #define EN_ADAPTIVE     0x96
 #define DIS_ADAPTIVE    0x97
 #define CLK_BYTES_OR_HIGH 0x9c
-#define CLK_BYTES_OR_LOW  0x0d
+#define CLK_BYTES_OR_LOW  0x9d
 /*FT232H specific commands */
 #define DRIVE_OPEN_COLLECTOR 0x9e
 /* Value Low */
@@ -332,6 +332,7 @@ enum ftdi_eeprom_value
     CHANNEL_C_RS485    = 53,
     CHANNEL_D_RS485    = 54,
     RELEASE_NUMBER     = 55,
+    RS232_INVERSION    = 56,
 };
 
 /**
