@@ -1,3 +1,9 @@
+libftdi (1.1+git20141001-2) unstable; urgency=medium
+
+  * [a12237e] Bump standards version to 3.9.6 (fixes: #601).
+
+ -- Florian Preinstorfer <fp@xell.at>  Tue, 14 Oct 2014 15:23:51 +0200
+
 libftdi (1.1+git20141001-1) unstable; urgency=medium
 
   * [8f89b92] Imported Upstream version 1.1+git20141001
