@@ -12,7 +12,7 @@ Build-Depends: debhelper (>= 9),
  pkg-config (>= 0.18),
  python-dev (>= 2.6.6-3~),
  swig,
-Standards-Version: 3.9.5
+Standards-Version: 3.9.6
 Homepage: http://www.intra2net.com/en/developer/libftdi/
 
 Package: ftdi-eeprom
