@@ -1,15 +1,24 @@
 From: Florian Preinstorfer <fp@xell.at>
-Date: Wed, 1 Oct 2014 14:03:30 +0200
+Date: Thu, 23 Oct 2014 08:08:07 +0200
 Subject: Replace eeprom->rs232_inversion with eeprom->invert.
 
+Summary:
+ * The field eeprom->rs232_inversion reads and writes to the same
+   location as eeprom->invert already does.
+ * The configuration values invert_*, as read by ftdi_eeprom, are
+   working ootb with FT230X chips. No configuration values were
+   available for rs232_inversion.
+
+I tested this commit with FT231X which identifies itself as VID 0x0403
+and PID 0x6015.
 ---
- src/ftdi.c   | 61 +++++++++++++++++-------------------------------------------
- src/ftdi.h   |  3 ++-
+ src/ftdi.c   | 14 ++++----------
+ src/ftdi.h   |  1 -
  src/ftdi_i.h |  5 -----
- 3 files changed, 19 insertions(+), 50 deletions(-)
+ 3 files changed, 4 insertions(+), 16 deletions(-)
 
 diff --git a/src/ftdi.c b/src/ftdi.c
-index ad9e20e..da7073d 100644
+index ad9e20e..0a6dfb5 100644
 --- a/src/ftdi.c
 +++ b/src/ftdi.c
 @@ -3065,7 +3065,7 @@ int ftdi_eeprom_build(struct ftdi_context *ftdi)
@@ -30,62 +39,25 @@ index ad9e20e..da7073d 100644
      }
  
      if (verbose)
-@@ -3515,33 +3515,8 @@ int ftdi_eeprom_decode(struct ftdi_context *ftdi, int verbose)
+@@ -3515,7 +3515,7 @@ int ftdi_eeprom_decode(struct ftdi_context *ftdi, int verbose)
                  if (eeprom->cbus_function[i]<= CBUSH_AWAKE)
                      fprintf(stdout,"CBUS%d Function: %s\n", i, cbush_mux[eeprom->cbus_function[i]]);
              }
 -            if(eeprom->rs232_inversion ) {
--                struct bitnames {
--                    int mask;
--                    char *name;
--                };
--
--                struct bitnames invbitlist[] = {
--                    {INVERT_TXD, "TXD"},
--                    {INVERT_RXD, "RXD"},
--                    {INVERT_RTS, "RTS"},
--                    {INVERT_CTS, "CTS"},
--                    {INVERT_DTR, "DTR"},
--                    {INVERT_DSR, "DSR"},
--                    {INVERT_DCD, "DCD"},
--                    {INVERT_RI, "RI"},
--                    {0, NULL},
--                };
--                int n = 0;
--                printf("Inversion on ");
--                for (i=0; invbitlist[i].mask;i++) {
++            if(eeprom->invert ) {
+                 struct bitnames {
+                     int mask;
+                     char *name;
+@@ -3535,7 +3535,7 @@ int ftdi_eeprom_decode(struct ftdi_context *ftdi, int verbose)
+                 int n = 0;
+                 printf("Inversion on ");
+                 for (i=0; invbitlist[i].mask;i++) {
 -                    if(eeprom->rs232_inversion & invbitlist[i].mask) {
--                        if (n++) printf (",");
--                        printf (" %s", invbitlist[i].name);
--                    }
--                }
--                printf (" Pin%s\n",(n==1)?"":"s");
--            }
-+            if (eeprom->invert)
-+              print_inverted_bits(eeprom->invert);
-         }
- 
-         if (ftdi->type == TYPE_R)
-@@ -3551,16 +3526,9 @@ int ftdi_eeprom_decode(struct ftdi_context *ftdi, int verbose)
-                                 "IOMODE","BB_WR","BB_RD"
-                                };
-             char *cbus_BB[] = {"RXF","TXE","RD", "WR"};
--
-             if (eeprom->invert)
--            {
--                char *r_bits[] = {"TXD","RXD","RTS", "CTS","DTR","DSR","DCD","RI"};
--                fprintf(stdout,"Inverted bits:");
--                for (i=0; i<8; i++)
--                    if ((eeprom->invert & (1<<i)) == (1<<i))
--                        fprintf(stdout," %s",r_bits[i]);
--                fprintf(stdout,"\n");
--            }
-+              print_inverted_bits(eeprom->invert);
-+
-             for (i=0; i<5; i++)
-             {
-                 if (eeprom->cbus_function[i]<CBUS_BB)
-@@ -3764,9 +3732,6 @@ int ftdi_get_eeprom_value(struct ftdi_context *ftdi, enum ftdi_eeprom_value valu
++                    if(eeprom->invert & invbitlist[i].mask) {
+                         if (n++) printf (",");
+                         printf (" %s", invbitlist[i].name);
+                     }
+@@ -3764,9 +3764,6 @@ int ftdi_get_eeprom_value(struct ftdi_context *ftdi, enum ftdi_eeprom_value valu
          case CHIP_SIZE:
              *value = ftdi->eeprom->size;
              break;
@@ -95,7 +67,7 @@ index ad9e20e..da7073d 100644
          default:
              ftdi_error_return(-1, "Request for unknown EEPROM value");
      }
-@@ -3957,9 +3922,6 @@ int ftdi_set_eeprom_value(struct ftdi_context *ftdi, enum ftdi_eeprom_value valu
+@@ -3957,9 +3954,6 @@ int ftdi_set_eeprom_value(struct ftdi_context *ftdi, enum ftdi_eeprom_value valu
          case CHIP_SIZE:
              ftdi_error_return(-2, "EEPROM Value can't be changed");
              break;
@@ -105,24 +77,8 @@ index ad9e20e..da7073d 100644
  
          default :
              ftdi_error_return(-1, "Request to unknown EEPROM value");
-@@ -4327,4 +4289,15 @@ char *ftdi_get_error_string (struct ftdi_context *ftdi)
-     return ftdi->error_str;
- }
- 
-+void print_inverted_bits(int invert)
-+{
-+    int i;
-+    char *r_bits[] = {"TXD","RXD","RTS","CTS","DTR","DSR","DCD","RI"};
-+    fprintf(stdout,"Inverted bits:");
-+    for (i=0; i<8; i++)
-+        if ((invert & (1<<i)) == (1<<i))
-+            fprintf(stdout," %s",r_bits[i]);
-+    fprintf(stdout,"\n");
-+}
-+
- /* @} end of doxygen libftdi group */
 diff --git a/src/ftdi.h b/src/ftdi.h
-index e192a66..66ad7bc 100644
+index e192a66..07fcd71 100644
 --- a/src/ftdi.h
 +++ b/src/ftdi.h
 @@ -332,7 +332,6 @@ enum ftdi_eeprom_value
@@ -133,15 +89,6 @@ index e192a66..66ad7bc 100644
  };
  
  /**
-@@ -555,6 +554,8 @@ extern "C"
- 
-     char *ftdi_get_error_string(struct ftdi_context *ftdi);
- 
-+    void print_inverted_bits(int inverted);
-+
- #ifdef __cplusplus
- }
- #endif
 diff --git a/src/ftdi_i.h b/src/ftdi_i.h
 index 066790b..19d8dd5 100644
 --- a/src/ftdi_i.h
