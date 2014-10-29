@@ -1,4 +1,2 @@
 0001-Drop-suffix-1-from-libftdi.patch
 0002-Update-Doxyfile.in-to-resolve-warnings.patch
-0003-Replace-eeprom-rs232_inversion-with-eeprom-invert.patch
-0004-Add-print_inverted_bits-to-replace-a-duplicated-code.patch
