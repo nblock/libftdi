@@ -332,7 +332,6 @@ enum ftdi_eeprom_value
     CHANNEL_C_RS485    = 53,
     CHANNEL_D_RS485    = 54,
     RELEASE_NUMBER     = 55,
-    RS232_INVERSION    = 56,
 };
 
 /**
@@ -554,6 +553,8 @@ extern "C"
     int ftdi_write_eeprom_location(struct ftdi_context *ftdi, int eeprom_addr, unsigned short eeprom_val);
 
     char *ftdi_get_error_string(struct ftdi_context *ftdi);
+
+    void print_inverted_bits(int inverted);
 
 #ifdef __cplusplus
 }
