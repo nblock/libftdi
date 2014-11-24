@@ -1,25 +1,25 @@
 From: Florian Preinstorfer <fp@xell.at>
-Date: Wed, 1 Oct 2014 13:44:17 +0200
+Date: Mon, 24 Nov 2014 08:30:43 +0100
 Subject: Drop suffix 1 from libftdi.
 
 ---
- CMakeLists.txt                        | 50 ++++++++++++++++-------------------
- examples/CMakeLists.txt               | 22 +++++++--------
+ CMakeLists.txt                        | 48 +++++++++++++++++------------------
+ examples/CMakeLists.txt               | 22 ++++++++--------
  examples/cmake_example/CMakeLists.txt |  2 +-
  ftdi_eeprom/CMakeLists.txt            |  2 +-
- ftdipp/CMakeLists.txt                 | 26 +++++++++---------
+ ftdipp/CMakeLists.txt                 | 26 +++++++++----------
  libftdi1-config.in                    |  4 +--
  libftdi1.pc.in                        |  4 +--
- libftdi1.spec.in                      | 30 ++++++++++-----------
+ libftdi1.spec.in                      | 30 +++++++++++-----------
  libftdipp1.pc.in                      |  8 +++---
- python/CMakeLists.txt                 | 20 +++++++-------
+ python/CMakeLists.txt                 | 20 +++++++--------
  python/ftdi1.i                        |  4 +--
- src/CMakeLists.txt                    | 20 +++++++-------
+ src/CMakeLists.txt                    | 20 +++++++--------
  test/CMakeLists.txt                   |  8 +++---
- 13 files changed, 98 insertions(+), 102 deletions(-)
+ 13 files changed, 98 insertions(+), 100 deletions(-)
 
 diff --git a/CMakeLists.txt b/CMakeLists.txt
-index f08a58c..10d9fb9 100644
+index 397d367..fb2a154 100644
 --- a/CMakeLists.txt
 +++ b/CMakeLists.txt
 @@ -1,8 +1,8 @@
@@ -27,7 +27,7 @@ index f08a58c..10d9fb9 100644
 -project(libftdi1)
 +project(libftdi)
  set(MAJOR_VERSION 1)
- set(MINOR_VERSION 1)
+ set(MINOR_VERSION 2)
 -set(PACKAGE libftdi1)
 +set(PACKAGE libftdi)
  set(VERSION_STRING ${MAJOR_VERSION}.${MINOR_VERSION})
@@ -116,8 +116,8 @@ index f08a58c..10d9fb9 100644
 +  configure_file ( cmake/LibFTDI1Config.cmake.in ${CMAKE_CURRENT_BINARY_DIR}/LibFTDIConfig.cmake @ONLY )
 +  configure_file ( cmake/LibFTDI1ConfigVersion.cmake.in ${CMAKE_CURRENT_BINARY_DIR}/LibFTDIConfigVersion.cmake @ONLY )
  else ()
-   include(CMakePackageConfigHelpers)    
-   
+   include(CMakePackageConfigHelpers)
+ 
    configure_package_config_file (
      cmake/LibFTDI1Config.cmake.in
 -    ${CMAKE_CURRENT_BINARY_DIR}/LibFTDI1Config.cmake
@@ -133,25 +133,24 @@ index f08a58c..10d9fb9 100644
 +    LibFTDIConfigVersion.cmake
      VERSION ${LIBFTDI_VERSION_STRING} 
      COMPATIBILITY AnyNewerVersion
-   ) 
-@@ -231,14 +231,10 @@ endif ()
+   )
+@@ -231,13 +231,11 @@ endif ()
  
  
  install ( FILES 
 -            ${CMAKE_CURRENT_BINARY_DIR}/LibFTDI1Config.cmake
 -            ${CMAKE_CURRENT_BINARY_DIR}/LibFTDI1ConfigVersion.cmake
 -            cmake/UseLibFTDI1.cmake
--            
+-
 +            ${CMAKE_CURRENT_BINARY_DIR}/LibFTDIConfig.cmake
 +            ${CMAKE_CURRENT_BINARY_DIR}/LibFTDIConfigVersion.cmake
            DESTINATION ${LIBFTDI_CMAKE_CONFIG_DIR}
          )
+-
 +install ( FILES cmake/UseLibFTDI1.cmake DESTINATION ${LIBFTDI_CMAKE_CONFIG_DIR} RENAME UseLibFTDI.cmake)
  
--
--        
--        
- include(CPack)
+ 
+ 
 diff --git a/examples/CMakeLists.txt b/examples/CMakeLists.txt
 index 1263c62..77f6e58 100644
 --- a/examples/CMakeLists.txt
