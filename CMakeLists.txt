@@ -1,7 +1,7 @@
 # Project
 project(libftdi1)
 set(MAJOR_VERSION 1)
-set(MINOR_VERSION 1)
+set(MINOR_VERSION 2)
 set(PACKAGE libftdi1)
 set(VERSION_STRING ${MAJOR_VERSION}.${MINOR_VERSION})
 set(VERSION ${VERSION_STRING})
@@ -208,8 +208,8 @@ if(CMAKE_VERSION VERSION_LESS 2.8.8)
   configure_file ( cmake/LibFTDI1Config.cmake.in ${CMAKE_CURRENT_BINARY_DIR}/LibFTDI1Config.cmake @ONLY )
   configure_file ( cmake/LibFTDI1ConfigVersion.cmake.in ${CMAKE_CURRENT_BINARY_DIR}/LibFTDI1ConfigVersion.cmake @ONLY )
 else ()
-  include(CMakePackageConfigHelpers)    
-  
+  include(CMakePackageConfigHelpers)
+
   configure_package_config_file (
     cmake/LibFTDI1Config.cmake.in
     ${CMAKE_CURRENT_BINARY_DIR}/LibFTDI1Config.cmake
@@ -226,19 +226,19 @@ else ()
     LibFTDI1ConfigVersion.cmake 
     VERSION ${LIBFTDI_VERSION_STRING} 
     COMPATIBILITY AnyNewerVersion
-  ) 
-endif ()        
+  )
+endif ()
 
 
 install ( FILES 
             ${CMAKE_CURRENT_BINARY_DIR}/LibFTDI1Config.cmake
             ${CMAKE_CURRENT_BINARY_DIR}/LibFTDI1ConfigVersion.cmake
             cmake/UseLibFTDI1.cmake
-            
+
           DESTINATION ${LIBFTDI_CMAKE_CONFIG_DIR}
         )
 
 
-        
-        
+
+
 include(CPack)

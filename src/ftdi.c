@@ -295,7 +295,7 @@ struct ftdi_version_info ftdi_get_library_version(void)
     Finds all ftdi devices with given VID:PID on the usb bus. Creates a new
     ftdi_device_list which needs to be deallocated by ftdi_list_free() after
     use.  With VID:PID 0:0, search for the default devices
-    (0x403:0x6001, 0x403:0x6010, 0x403:0x6011, 0x403:0x6014)
+    (0x403:0x6001, 0x403:0x6010, 0x403:0x6011, 0x403:0x6014, 0x403:0x6015)
 
     \param ftdi pointer to ftdi_context
     \param devlist Pointer where to store list of found devices
@@ -328,11 +328,12 @@ int ftdi_usb_find_all(struct ftdi_context *ftdi, struct ftdi_device_list **devli
         if (libusb_get_device_descriptor(dev, &desc) < 0)
             ftdi_error_return_free_device_list(-6, "libusb_get_device_descriptor() failed", devs);
 
-        if (((vendor != 0 && product != 0) &&
+        if (((vendor || product) &&
                 desc.idVendor == vendor && desc.idProduct == product) ||
-                ((vendor == 0 && product == 0) &&
+                (!(vendor || product) &&
                  (desc.idVendor == 0x403) && (desc.idProduct == 0x6001 || desc.idProduct == 0x6010
-                                              || desc.idProduct == 0x6011 || desc.idProduct == 0x6014)))
+                                              || desc.idProduct == 0x6011 || desc.idProduct == 0x6014
+                                              || desc.idProduct == 0x6015)))
         {
             *curdev = (struct ftdi_device_list*)malloc(sizeof(struct ftdi_device_list));
             if (!*curdev)
@@ -3121,6 +3122,21 @@ static unsigned char bit2type(unsigned char bits)
     }
     return 0;
 }
+/* Decode 230X / 232R type chips invert bits
+ * Prints directly to stdout.
+*/
+static void print_inverted_bits(int invert)
+{
+    char *r_bits[] = {"TXD","RXD","RTS","CTS","DTR","DSR","DCD","RI"};
+    int i;
+
+    fprintf(stdout,"Inverted bits:");
+    for (i=0; i<8; i++)
+        if ((invert & (1<<i)) == (1<<i))
+            fprintf(stdout," %s",r_bits[i]);
+
+    fprintf(stdout,"\n");
+}
 /**
    Decode binary EEPROM image into an ftdi_eeprom structure.
 
@@ -3515,8 +3531,9 @@ int ftdi_eeprom_decode(struct ftdi_context *ftdi, int verbose)
                 if (eeprom->cbus_function[i]<= CBUSH_AWAKE)
                     fprintf(stdout,"CBUS%d Function: %s\n", i, cbush_mux[eeprom->cbus_function[i]]);
             }
-            if(eeprom->invert )
-              print_inverted_bits(eeprom->invert);
+
+            if (eeprom->invert)
+                print_inverted_bits(eeprom->invert);
         }
 
         if (ftdi->type == TYPE_R)
@@ -3528,7 +3545,7 @@ int ftdi_eeprom_decode(struct ftdi_context *ftdi, int verbose)
             char *cbus_BB[] = {"RXF","TXE","RD", "WR"};
 
             if (eeprom->invert)
-              print_inverted_bits(eeprom->invert);
+                print_inverted_bits(eeprom->invert);
 
             for (i=0; i<5; i++)
             {
@@ -4288,17 +4305,6 @@ char *ftdi_get_error_string (struct ftdi_context *ftdi)
         return "";
 
     return ftdi->error_str;
-}
-
-void print_inverted_bits(int invert)
-{
-    int i;
-    char *r_bits[] = {"TXD","RXD","RTS","CTS","DTR","DSR","DCD","RI"};
-    fprintf(stdout,"Inverted bits:");
-    for (i=0; i<8; i++)
-        if ((invert & (1<<i)) == (1<<i))
-            fprintf(stdout," %s",r_bits[i]);
-    fprintf(stdout,"\n");
 }
 
 /* @} end of doxygen libftdi group */
